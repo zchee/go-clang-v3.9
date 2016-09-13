@@ -1,35 +1,22 @@
-language: go
-go:
-  - 1.5
+sudo: false
+services: docker
+# undocumented minimum language set
+language: generic
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.9
-    packages:
-      - llvm-3.9
-      - clang-3.9
-      - libclang1-3.9
-      - libclang-3.9-dev
+env:
+  - LLVM_VERSION=3.9
 
+before_install:
+  - sudo service docker stop; if [ "$(ls -A /home/travis/docker)" ]; then echo "/home/travis/docker already set"; else sudo mv /var/lib/docker /home/travis/docker; fi
+  - sudo bash -c "echo 'DOCKER_OPTS=\"-H tcp://127.0.0.1:2375 -H unix:///var/run/docker.sock -g /home/travis/docker\"' > /etc/default/docker"; sudo service docker start
 install:
-  - mkdir -p /home/travis/bin
-  - sudo ln -s /usr/bin/llvm-config-3.9 /home/travis/bin/llvm-config
-  - sudo ln -s /usr/lib/llvm-3.9/lib/libclang.so.1 /usr/lib/x86_64-linux-gnu/libclang.so
-  - sudo ldconfig
-
-  - llvm-config --version
-  - llvm-config --includedir
-  - llvm-config --libdir
-
-  - make install-dependencies
-  - make install-tools
-
+  # TODO(zchee): instead of `docker pull goclang/base:latest` and remove docker/Dockerfile.base after uploaded goclang/base to hub.docker.com
+  - docker build --rm -f docker/Dockerfile.base -t goclang/base .
+  - make docker-build
 script:
-  # Install the project
-  - make install
-
-  # Test without any coverage
-  - make test-verbose
-
+  - make docker-test
+before_cache:
+  - sudo service docker stop; sudo chown -R travis ~/docker
+cache:
+  directories:
+    ~/docker
