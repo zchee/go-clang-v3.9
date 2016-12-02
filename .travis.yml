@@ -1,3 +1,9 @@
+sudo: required
+dist: trusty
+
+cache:
+  apt: true
+
 language: go
 go:
   - 1.5
@@ -6,7 +12,8 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.9
+      - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main'
+        key_url: 'http://apt.llvm.org/llvm-snapshot.gpg.key'
     packages:
       - llvm-3.9
       - clang-3.9
